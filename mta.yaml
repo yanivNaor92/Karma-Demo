@@ -1,0 +1,81 @@
+_schema-version: "3.2"
+ID: KarmaDemo1
+version: 0.0.1
+modules:
+- name: KarmaDemo1-destination-content
+  type: com.sap.application.content
+  requires:
+  - name: uaa_KarmaDemo1
+    parameters:
+      service-key:
+        name: uaa_KarmaDemo1-key
+  - name: KarmaDemo1_html_repo_host
+    parameters:
+      service-key:
+        name: KarmaDemo1_html_repo_host-key
+  - name: KarmaDemo1-destination-service
+    parameters:
+      content-target: true
+  parameters:
+    content:
+      subaccount:
+        destinations:
+        - Name: demoService_KarmaDemo1_html_repo_host
+          ServiceInstanceName: KarmaDemo1-html5-app-host-service
+          ServiceKeyName: KarmaDemo1_html_repo_host-key
+          sap.cloud.service: demoService
+        - Authentication: OAuth2UserTokenExchange
+          Name: demoService_uaa_KarmaDemo1
+          ServiceInstanceName: KarmaDemo1-xsuaa-service
+          ServiceKeyName: uaa_KarmaDemo1-key
+          sap.cloud.service: demoService
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+- name: KarmaDemo1_ui_deployer
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: KarmaDemo1_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - KArmaApp1-content.zip
+      name: KArmaApp1
+      target-path: resources/
+- name: KArmaApp1
+  type: html5
+  path: KArmaApp1
+  build-parameters:
+    builder: custom
+    commands:
+    - npm run build
+    supported-platforms: []
+resources:
+- name: KarmaDemo1-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: destination
+    service-name: KarmaDemo1-destination-service
+    service-plan: lite
+- name: KarmaDemo1_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: KarmaDemo1-html5-app-host-service
+    service-plan: app-host
+- name: uaa_KarmaDemo1
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: KarmaDemo1-xsuaa-service
+    service-plan: application
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install
